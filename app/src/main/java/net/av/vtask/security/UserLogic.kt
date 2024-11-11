@@ -9,7 +9,7 @@ class UserLogic(private val userName: String) {
     companion object {
         const val PASSWORD_ATTEMPTS_TILL_COOLDOWN = 10
         const val SECONDS_DURATION_OF_PASSWORD_COOLDOWN = 30
-        const val LOCK_ATTEMPTS_TILL_DELETED = 10
+        const val LOCK_ATTEMPTS_TILL_DELETED = 5
         const val DAYS_TILL_LOCK_EXPIRATION = 30
     }
 

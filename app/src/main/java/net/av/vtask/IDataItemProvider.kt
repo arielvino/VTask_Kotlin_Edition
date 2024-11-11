@@ -1,19 +1,22 @@
 package net.av.vtask
 
+import net.av.vtask.data.IDataItem
+
 interface IDataItemProvider {
     companion object {
-        val current: IDataItemProvider = DataItemProvider
+        val current: IDataItemProvider
+            get() = FilesDataItemProvider(App.userName!!)
 
-        val rootId: Map<RootGroups, String> = mapOf(
-            RootGroups.Tasks to "--TASK--",
-            RootGroups.Lists to "--LIST--",
-            RootGroups.Notes to "--NOTE--"
+        val rootId: Map<IndependentId, String> = mapOf(
+            IndependentId.Root to "--ROOT--",
+            IndependentId.PendingTasks to "--TASK--",
+            IndependentId.Lists to "--LIST--",
+            IndependentId.Notes to "--NOTE--"
         )
     }
-    enum class RootGroups{
-        Tasks,
-        Lists,
-        Notes
+
+    enum class IndependentId {
+        Root, PendingTasks, Lists, Notes
     }
 
     fun init()

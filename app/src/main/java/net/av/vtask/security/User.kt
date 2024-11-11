@@ -1,6 +1,5 @@
 package net.av.vtask.security
 
-import androidx.room.Entity
 import java.time.LocalDateTime
 
 class User(

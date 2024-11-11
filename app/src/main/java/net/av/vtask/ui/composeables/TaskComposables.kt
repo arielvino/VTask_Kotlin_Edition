@@ -2,6 +2,8 @@ package net.av.vtask.ui.composeables
 
 import androidx.annotation.IntRange
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,26 +15,34 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.av.vtask.IDataItemProvider
 import net.av.vtask.IItemHierarchyManager
-import net.av.vtask.Task
+import net.av.vtask.R
+import net.av.vtask.data.Task
+import net.av.vtask.security.StandardSpacer
+import net.av.vtask.ui.theme.VTaskTheme
 
 @Composable
 fun ColorSlider(
@@ -76,7 +86,8 @@ fun determineColor(value: Int, positiveProperty: Boolean): Color {
 
 @Composable
 fun TaskEditor(
-    onSave: (Task) -> Unit, task: Task = Task("New task 1", "", 0, 0, 0, 0)
+    onSave: (task: Task, makeParentAwait: Boolean) -> Unit,
+    task: Task = Task(stringResource(R.string.default_task_title), "", id = "")
 ) {
     val rememberedTask = remember {
         task
@@ -89,17 +100,8 @@ fun TaskEditor(
         mutableStateOf(rememberedTask.content)
     }
 
-    val urgency = rememberSaveable {
-        mutableIntStateOf(rememberedTask.urgency)
-    }
-    val familiarity = rememberSaveable {
-        mutableIntStateOf(rememberedTask.familiarity)
-    }
-    val motivation = rememberSaveable {
-        mutableIntStateOf(rememberedTask.motivation)
-    }
-    val deterrence = rememberSaveable {
-        mutableIntStateOf(rememberedTask.deterrence)
+    val status = rememberSaveable {
+        mutableStateOf(rememberedTask.status)
     }
 
     Column(
@@ -116,95 +118,150 @@ fun TaskEditor(
                 title.value = it
                 rememberedTask.title = it
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    3.dp, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.large
+                ),
+            shape = MaterialTheme.shapes.large,
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            )
         )
-        Spacer(modifier = Modifier.height(5.dp))
-        ColorSlider(label = "Urgency", initialValue = urgency.intValue) {
-            urgency.intValue = it
-            rememberedTask.urgency = it
+        StandardSpacer()
+
+        val expanded = remember {
+            mutableStateOf(false)
         }
-        Spacer(modifier = Modifier.height(5.dp))
-        ColorSlider(
-            label = "Familiarity", initialValue = familiarity.intValue, positiveProperty = true
-        ) {
-            familiarity.intValue = it
-            rememberedTask.familiarity = it
+        Row(modifier = Modifier
+            .clickable {
+                expanded.value = !expanded.value
+            }
+            .border(
+                width = 1.dp, color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            .background(color = MaterialTheme.colorScheme.primaryContainer)
+            .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = "expandStatusList",
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Text(
+                text = status.value.name,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                modifier = Modifier.padding(10.dp, 0.dp)
+            )
         }
-        Spacer(modifier = Modifier.height(5.dp))
-        ColorSlider(
-            label = "Motivation", initialValue = motivation.intValue, positiveProperty = true
-        ) {
-            motivation.intValue = it
-            rememberedTask.motivation = it
+        if (expanded.value) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Task.Status.entries.forEach {
+                    Box(modifier = Modifier
+                        .clickable {
+                            status.value = it
+                            rememberedTask.status = it
+                            expanded.value = false
+                        }
+                        .background(color = if (it == status.value) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer)
+                        .fillMaxWidth()) {
+                        Text(text = it.name)
+                    }
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(5.dp))
-        ColorSlider(label = "Deterrence", initialValue = deterrence.intValue) {
-            deterrence.intValue = it
-            rememberedTask.deterrence = it
+        val makeParentAwait = rememberSaveable {
+            mutableStateOf(false)
         }
-        Spacer(modifier = Modifier.height(5.dp))
+        if (status.value == Task.Status.Pending) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = makeParentAwait.value,
+                    onCheckedChange = { makeParentAwait.value = it })
+                Text(text = "Make parent await", color = MaterialTheme.colorScheme.onBackground)
+            }
+        }
+        StandardSpacer()
         Text(text = "Content:", color = MaterialTheme.colorScheme.onBackground)
         TextField(modifier = Modifier
             .padding(10.dp)
             .weight(1f)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .border(3.dp, MaterialTheme.colorScheme.primaryContainer),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent
+            ),
             value = content.value,
             textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Justify),
             onValueChange = {
                 content.value = it
                 rememberedTask.content = it
             })
-        Spacer(modifier = Modifier.height(5.dp))
+        StandardSpacer()
         Button(modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             onClick = {
-                onSave(rememberedTask)
+                onSave(rememberedTask, makeParentAwait.value)
             }) {
             Text(text = "Save", color = MaterialTheme.colorScheme.onPrimaryContainer)
         }
     }
 }
 
+@Preview
+@Composable
+fun TaskCreationPreview() {
+    VTaskTheme {
+        TaskCreatorScreen(parentId = "") {}
+    }
+}
+
 @Composable
 fun TaskCreatorScreen(parentId: String, onExit: () -> Unit) {
-    TaskEditor(onSave = {
-        IItemHierarchyManager.current.create(it, parentId)
+    TaskEditor(onSave = { task, makeParentAwait ->
+        val id = IItemHierarchyManager.current.create(task, parentId)
+        if (makeParentAwait) {
+            IItemHierarchyManager.current.makeParentAwait(id)
+        }
         onExit()
     })
 }
 
 @Composable
 fun TaskEditorScreen(id: String, onExit: () -> Unit) {
-    TaskEditor(task = IDataItemProvider.current.get(id) as Task, onSave = {
-        IDataItemProvider.current.edit(id, it)
+    TaskEditor(task = IDataItemProvider.current.get(id) as Task, onSave = { task, makeParetAwait ->
+        IItemHierarchyManager.current.edit(task, id)
+        IItemHierarchyManager.current.makeParentAwait(id)
         onExit()
     })
 }
 
 @Composable
 fun TaskViewer(
-    id: String,
-    onNavigateTo: (id: String) -> Unit,
-    modifier: Modifier = Modifier
+    id: String, onNavigateTo: (id: String) -> Unit, modifier: Modifier = Modifier
 ) {
     val task = IDataItemProvider.current.get(id)
 
     if (task != null) {
         task as Task
+        StandardSpacer()
         Column(
             modifier = modifier
                 .background(color = MaterialTheme.colorScheme.background)
                 .wrapContentHeight()
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = MaterialTheme.shapes.large
+                    )
+                    .padding(10.dp)
             ) {
-                PropertyColorDisplay(label = "Urgency", value = task.urgency, positiveProperty = false)
-                PropertyColorDisplay(label = "Familiarity", value = task.familiarity, positiveProperty = true)
-                PropertyColorDisplay(label = "Motivation", value = task.motivation, positiveProperty = true)
-                PropertyColorDisplay(label = "Deterrence", value = task.deterrence, positiveProperty = false)
+                Text(text = task.status.name, color = MaterialTheme.colorScheme.onBackground)
             }
+            StandardSpacer()
             Text(
                 text = task.content,
                 style = MaterialTheme.typography.bodyLarge,
@@ -230,6 +287,7 @@ fun PropertyColorDisplay(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onBackground)
         )
+        Spacer(modifier = Modifier.height(3.dp))
         Box(
             modifier = Modifier
                 .height(20.dp)

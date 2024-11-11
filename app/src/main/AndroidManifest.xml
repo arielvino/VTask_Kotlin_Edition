@@ -14,7 +14,7 @@
         android:name=".App"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.composeables.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.VTask">
             <intent-filter>

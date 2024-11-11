@@ -2,6 +2,8 @@ package net.av.vtask
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.av.vtask.data.Collection
+import net.av.vtask.data.IDataItem
 import org.junit.Test
 
 /**

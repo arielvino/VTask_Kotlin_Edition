@@ -1,4 +1,4 @@
-package net.av.vtask
+package net.av.vtask.data
 
 import kotlinx.serialization.Serializable
 

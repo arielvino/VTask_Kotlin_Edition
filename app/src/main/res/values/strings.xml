@@ -1,3 +1,22 @@
 <resources>
-    <string name="app_name">VTask</string>
+    <string name="app_name" translatable="false">VTask</string>
+    <string name="welcome_user">Welcome, %1$s</string>
+    <string name="set_a_password">Set a password:</string>
+    <string name="password">Password:</string>
+    <string name="confirm_password">Confirm password:</string>
+    <string name="create">Create</string>
+    <string name="fill_password">Fill password</string>
+    <string name="your_pinlock_has_been_expired">Your pinLock has been expired.</string>
+    <string name="there_was_an_error_with_your_pinlock">There was an error with your pinLock.</string>
+    <string name="too_many_attempts_please_enter_your_password">Too many attempts. Please enter your password.</string>
+    <string name="remaining_attempts">Remaining attempts: %1$s.</string>
+    <string name="use_pin_code_for_future_login">Use PIN code for future login</string>
+    <string name="login">Login</string>
+    <string name="enter_your_pin">Enter your PIN:</string>
+    <string name="pin_length_must_be_at_least_4">PIN length must be at least 4.</string>
+    <string name="switch_user">Switch user</string>
+    <string name="create_user">Create user</string>
+    <string name="welcome">Welcome</string>
+    <string name="user_name">User name:</string>
+    <string name="default_task_title">New task 1</string>
 </resources>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_user">שלום, %1$s</string>
+    <string name="set_a_password">צור סיסמה:</string>
+    <string name="password">סיסמה:</string>
+    <string name="confirm_password">אישור סיסמה:</string>
+    <string name="create">צור</string>
+    <string name="fill_password">הכנס סיסמה</string>
+    <string name="your_pinlock_has_been_expired">תוקף הקוד פג.</string>
+    <string name="there_was_an_error_with_your_pinlock">יש בעיה עם הקוד שלך.</string>
+    <string name="too_many_attempts_please_enter_your_password">יותר מידי ניסיונות כושלים. הכנס סיסמה.</string>
+    <string name="remaining_attempts">ניסיונות שנותרו: %1$s.</string>
+    <string name="use_pin_code_for_future_login">השתמש בקוד PIN בפעם הבאה</string>
+    <string name="login">כניסה</string>
+    <string name="enter_your_pin">הכנס את קוד ה-PIN:</string>
+    <string name="pin_length_must_be_at_least_4">קוד PIN חייב להיות באורך של 4 ספרות לפחות.</string>
+    <string name="switch_user">החלף משתמש</string>
+    <string name="create_user">צור משתמש</string>
+    <string name="welcome">ברוך הבא</string>
+    <string name="user_name">שם משתמש:</string>
+    <string name="default_task_title">משימה חדשה 1</string>
+</resources>

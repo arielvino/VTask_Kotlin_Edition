@@ -56,9 +56,9 @@ dependencies {
     implementation(libs.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json.v171)
-    implementation(libs.androidx.room.runtime)
+    //implementation(libs.androidx.room.runtime)
     //implementation(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
+    //implementation(libs.androidx.room.ktx)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

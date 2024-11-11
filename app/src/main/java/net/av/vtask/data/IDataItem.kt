@@ -1,4 +1,4 @@
-package net.av.vtask
+package net.av.vtask.data
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -8,10 +8,11 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("item_type")
 @Serializable
 sealed interface IDataItem {
-    companion object{
+    companion object {
 
     }
 
+    var id: String
     val title: String
     val referrers: MutableList<String>
 }

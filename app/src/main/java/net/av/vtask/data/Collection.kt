@@ -1,4 +1,4 @@
-package net.av.vtask
+package net.av.vtask.data
 
 import kotlinx.serialization.Serializable
 
@@ -7,5 +7,6 @@ import kotlinx.serialization.Serializable
 data class Collection(
     override val referrers: MutableList<String> = mutableListOf(),
     override val children: MutableList<String> = mutableListOf(),
-    override val title: String
+    override val title: String,
+    override var id: String
 ) : IItemWithChildren
