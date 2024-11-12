@@ -14,7 +14,7 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun itemSerialization() {
-        val item = Collection(mutableListOf(), mutableListOf(), "test")
+        val item = Collection(mutableListOf(), mutableListOf(), "test", "")
         println(Json.encodeToString<IDataItem>(item))
     }
 }

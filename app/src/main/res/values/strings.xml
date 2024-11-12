@@ -19,4 +19,6 @@
     <string name="welcome">Welcome</string>
     <string name="user_name">User name:</string>
     <string name="default_task_title">New task 1</string>
+    <string name="folder_name">Folder name:</string>
+    <string name="too_many_attempts">Too many attempts.</string>
 </resources>

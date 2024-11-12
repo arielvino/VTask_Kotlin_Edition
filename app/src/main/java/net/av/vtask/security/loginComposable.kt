@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Checkbox
@@ -36,12 +38,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextMotion
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +51,7 @@ import net.av.vtask.App
 import net.av.vtask.ui.composeables.MainActionButton
 import net.av.vtask.ui.composeables.OkCancelButton
 import net.av.vtask.R
+import net.av.vtask.ui.theme.VTaskTheme
 import kotlin.concurrent.thread
 
 fun userNameValidation(userName: String): String {
@@ -199,8 +201,20 @@ fun UserAuthenticationScreen(
         userState.value = userHandler.determineUserState()
     }
 
-    Column(modifier = modifier) {
-        LoginGreeting(text = stringResource(id = R.string.welcome_user, userName))
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            imageVector = Icons.Filled.AccountCircle,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .height(200.dp)
+                .aspectRatio(1f)
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer, shape = CircleShape
+                )
+        )
+        LoginGreeting(text = userName)
+        StandardSpacer()
         StandardSpacer()
         when (userState.value) {
             is NoUser -> CreateUser {
@@ -234,6 +248,9 @@ fun UserAuthenticationScreen(
                 }
             })
 
+            is PasswordCoolDown -> PasswordCoolDown(
+                refreshUserState, (userState.value as PasswordCoolDown).remainingSeconds
+            )
         }
         StandardSpacer()
         Text(text = stringResource(R.string.switch_user),
@@ -430,6 +447,39 @@ fun LoginWithPIN(
     }
 }
 
+@Composable
+fun PasswordCoolDown(refreshState: () -> Unit, secondsLeft: Int) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = stringResource(R.string.too_many_attempts), color = Color.Red)
+        StandardSpacer()
+        Box(
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer, shape = CircleShape
+                )
+                .border(
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    width = 1.5f.dp,
+                    shape = CircleShape
+                )
+        ) {
+            Text(
+                text = secondsLeft.toString(),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.displayLarge,
+                modifier = Modifier.padding(20.dp)
+            )
+        }
+        LaunchedEffect(key1 = secondsLeft) {
+            Thread.sleep(1000)
+            refreshState()
+        }
+    }
+}
+
 fun validatePIN(PIN: String): String {
     return if (PIN.length < 4) {
         App.appContext.getString(R.string.pin_length_must_be_at_least_4)
@@ -457,20 +507,18 @@ fun LoginInput(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSecondaryContainer
         )
+        val fieldShape = MaterialTheme.shapes.extraLarge
         TextField(value = value,
             onValueChange = onValueChanged,
             modifier = Modifier
                 .border(
                     width = 3.dp,
                     color = if (validation(value)) Color.Green else Color.Red,
-                    shape = CircleShape
+                    shape = fieldShape
                 )
                 .wrapContentHeight()
                 .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.secondaryContainer, shape = CircleShape
-                )
-                .clip(CircleShape),
+                .clip(fieldShape),
             visualTransformation = if (showPassword.value) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = if (secret) {
                 {
@@ -480,7 +528,8 @@ fun LoginInput(
                         )
                     } else {
                         Pair(
-                            Icons.Filled.VisibilityOff, Color(0xff666666)
+                            Icons.Filled.VisibilityOff,
+                            MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
 
@@ -495,7 +544,9 @@ fun LoginInput(
             },
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer
             ))
     }
 }
@@ -510,10 +561,17 @@ fun LoginGreeting(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         color = MaterialTheme.colorScheme.onSecondaryContainer,
-        style = MaterialTheme.typography.displayMedium.copy(
-            textMotion = TextMotion.Animated, fontStyle = FontStyle.Italic
-        ),
+        style = MaterialTheme.typography.displayMedium,
         modifier = modifier.fillMaxWidth(),
         textAlign = TextAlign.Center
     )
+}
+
+@Preview
+@Composable
+fun CooldownPreview() {
+    VTaskTheme {
+        //PasswordCoolDown(refreshState = { /*TODO*/ }, secondsLeft = 3)
+        LoginInput(value = "ffffffff", label = "test", onValueChanged = {}, validation = { false })
+    }
 }

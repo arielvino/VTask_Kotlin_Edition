@@ -24,6 +24,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import net.av.vtask.IDataItemProvider
+import net.av.vtask.IItemHierarchyManager
+import net.av.vtask.data.Collection
 import net.av.vtask.security.UserSelectionScreen
 import net.av.vtask.ui.theme.VTaskTheme
 
@@ -60,13 +62,28 @@ fun MyApp() {
                 Viewer(id = id, onNavigateTo = {
                     navController.navigate("display/$it")
                 }, onCreateTaskPressed = {
-                    navController.navigate("create/$id")
+                    navController.navigate("create_task/$id")
+                }, onCreateNotePressed = {
+                    /*TODO*/
+                }, onCreateFolderPressed = {
+                    IItemHierarchyManager.current.create(Collection(title = it, id = ""), id)
+                    navController.navigate("display/$id")
+                },
+                    onEditTaskPressed = {
+                        navController.navigate("edit_task/$id")
+                    }
+                )
+            }
+            composable(route = "create_task/{parentId}") { backStackEntry ->
+                val parentId = backStackEntry.arguments?.getString("parentId")
+                    ?: IDataItemProvider.rootId[IDataItemProvider.IndependentId.PendingTasks]!!
+                TaskCreatorScreen(parentId = parentId, onExit = {
+                    navController.popBackStack()
                 })
             }
-            composable(route = "create/{parentId}") { backStackEntry ->
-                val id = backStackEntry.arguments?.getString("parentId")
-                    ?: IDataItemProvider.rootId[IDataItemProvider.IndependentId.PendingTasks]!!
-                TaskCreatorScreen(parentId = id, onExit = {
+            composable(route = "edit_task/{id}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("id")!!
+                TaskEditorScreen(id = id, onExit = {
                     navController.popBackStack()
                 })
             }

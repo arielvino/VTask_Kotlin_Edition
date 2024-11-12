@@ -19,4 +19,6 @@
     <string name="welcome">ברוך הבא</string>
     <string name="user_name">שם משתמש:</string>
     <string name="default_task_title">משימה חדשה 1</string>
+    <string name="folder_name">שם התיקייה:</string>
+    <string name="too_many_attempts">יותר מידי טעויות.</string>
 </resources>

@@ -17,10 +17,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -123,6 +127,11 @@ fun TaskEditor(
                 .border(
                     3.dp, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.large
                 ),
+            trailingIcon = {
+                IconButton(onClick = { title.value = "" }) {
+                    Icon(imageVector = Icons.Filled.Clear, contentDescription = "Clear title")
+                }
+            },
             shape = MaterialTheme.shapes.large,
             colors = TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
@@ -230,16 +239,21 @@ fun TaskCreatorScreen(parentId: String, onExit: () -> Unit) {
 
 @Composable
 fun TaskEditorScreen(id: String, onExit: () -> Unit) {
-    TaskEditor(task = IDataItemProvider.current.get(id) as Task, onSave = { task, makeParetAwait ->
+    TaskEditor(task = IDataItemProvider.current.get(id) as Task, onSave = { task, makeParentAwait ->
         IItemHierarchyManager.current.edit(task, id)
-        IItemHierarchyManager.current.makeParentAwait(id)
+        if (makeParentAwait) {
+            IItemHierarchyManager.current.makeParentAwait(id)
+        }
         onExit()
     })
 }
 
 @Composable
 fun TaskViewer(
-    id: String, onNavigateTo: (id: String) -> Unit, modifier: Modifier = Modifier
+    id: String,
+    onNavigateTo: (id: String) -> Unit,
+    onEditPressed: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val task = IDataItemProvider.current.get(id)
 
@@ -257,9 +271,17 @@ fun TaskViewer(
                         color = MaterialTheme.colorScheme.primaryContainer,
                         shape = MaterialTheme.shapes.large
                     )
-                    .padding(10.dp)
+                    .padding(10.dp, 0.dp)
             ) {
                 Text(text = task.status.name, color = MaterialTheme.colorScheme.onBackground)
+            }
+            StandardSpacer()
+            IconButton(onClick = { onEditPressed() }, colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "Edit task",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
             StandardSpacer()
             Text(
