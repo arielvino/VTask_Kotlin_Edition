@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "net.av.vtask"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "net.av.vtask"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -42,13 +42,14 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    buildToolsVersion = "36.1.0"
 
 }
 
