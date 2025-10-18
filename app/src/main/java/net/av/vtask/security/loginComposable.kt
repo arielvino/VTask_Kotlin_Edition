@@ -14,12 +14,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,13 +44,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,7 +61,6 @@ import net.av.vtask.App
 import net.av.vtask.ui.composeables.MainActionButton
 import net.av.vtask.ui.composeables.OkCancelButton
 import net.av.vtask.R
-import net.av.vtask.ui.theme.VTaskTheme
 import kotlin.concurrent.thread
 
 fun userNameValidation(userName: String): String {
@@ -100,7 +109,9 @@ fun UserSelectionScreen(navigateToHome: () -> Unit, modifier: Modifier = Modifie
         modifier = modifier
             .fillMaxSize()
             .background(color = MaterialTheme.colorScheme.background)
-            .padding(30.dp),
+            .padding(30.dp)
+            .verticalScroll(rememberScrollState())
+        ,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -201,20 +212,22 @@ fun UserAuthenticationScreen(
         userState.value = userHandler.determineUserState()
     }
 
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Icon(
             imageVector = Icons.Filled.AccountCircle,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
-                .height(200.dp)
+                .height(100.dp)
                 .aspectRatio(1f)
                 .background(
                     color = MaterialTheme.colorScheme.secondaryContainer, shape = CircleShape
                 )
         )
         LoginGreeting(text = userName)
-        StandardSpacer()
         StandardSpacer()
         when (userState.value) {
             is NoUser -> CreateUser {
@@ -223,14 +236,14 @@ fun UserAuthenticationScreen(
             }
 
             is NeedPassword -> LoginWithPassword(userState = userState.value as NeedPassword,
-                tryLogin = { password: String, PIN: String? ->
+                tryLogin = { password: String, pin: String? ->
                     val key = userHandler.unlockWithPassword(password)
                     if (key == null) {
                         refreshUserState()
                     } else {
                         CryptoFactory.key = key
-                        if (PIN != null) {
-                            userHandler.setupPINLock(PIN, key)
+                        if (pin != null) {
+                            userHandler.setupPINLock(pin, key)
                         }
                         CoroutineScope(Dispatchers.Main).launch {
                             navigateToHome()
@@ -252,7 +265,6 @@ fun UserAuthenticationScreen(
                 refreshUserState, (userState.value as PasswordCoolDown).remainingSeconds
             )
         }
-        StandardSpacer()
         Text(text = stringResource(R.string.switch_user),
             style = MaterialTheme.typography.bodyLarge.copy(
                 textAlign = TextAlign.Center,
@@ -330,7 +342,7 @@ fun passwordMessage(password: String): String {
 
 @Composable
 fun LoginWithPassword(
-    userState: NeedPassword, tryLogin: (password: String, PIN: String?) -> Unit
+    userState: NeedPassword, tryLogin: (password: String, pin: String?) -> Unit
 ) {
     Column {
         val password = remember {
@@ -341,7 +353,7 @@ fun LoginWithPassword(
             mutableStateOf(false)
         }
 
-        val PIN = remember {
+        val pin = remember {
             mutableStateOf("")
         }
 
@@ -396,12 +408,12 @@ fun LoginWithPassword(
         }
         if (usePIN.value) {
             LoginInput(
-                value = PIN.value,
-                onValueChanged = { PIN.value = it },
+                value = pin.value,
+                onValueChanged = { pin.value = it },
                 validation = { validatePIN(it).isEmpty() },
                 label = stringResource(id = R.string.enter_your_pin)
             )
-            Text(text = validatePIN(PIN.value), color = Color.Red)
+            Text(text = validatePIN(pin.value), color = Color.Red)
         }
         StandardSpacer()
         MainActionButton(
@@ -409,7 +421,7 @@ fun LoginWithPassword(
                 if (password.value.isNotEmpty()) {
                     wait.value = true
                     thread {
-                        tryLogin(password.value, if (usePIN.value) PIN.value else null)
+                        tryLogin(password.value, if (usePIN.value) pin.value else null)
                     }
                 }
             }, text = stringResource(R.string.login), wait = wait.value
@@ -417,33 +429,208 @@ fun LoginWithPassword(
     }
 }
 
+//@Composable
+//fun LoginWithPIN(
+//    userState: NeedPIN, tryLogin: (PIN: String) -> Unit
+//) {
+//    val PIN = remember {
+//        mutableStateOf("")
+//    }
+//
+//    Column {
+//        LoginInput(
+//            value = PIN.value,
+//            onValueChanged = { PIN.value = it },
+//            validation = { it.isNotEmpty() },
+//            label = stringResource(R.string.enter_your_pin)
+//        )
+//        if (userState is NeedPINWithAttemptsLeft) {
+//            Text(
+//                text = stringResource(id = R.string.remaining_attempts, userState.attemptsLeft),
+//                color = Color.Red
+//            )
+//        }
+//        StandardSpacer()
+//        MainActionButton(onClick = {
+//            if (PIN.value.isNotEmpty()) {
+//                tryLogin(PIN.value)
+//            }
+//        }, text = stringResource(id = R.string.login))
+//    }
+//}
+
 @Composable
 fun LoginWithPIN(
-    userState: NeedPIN, tryLogin: (PIN: String) -> Unit
+    userState: NeedPIN,
+    tryLogin: (pin: String) -> Unit
 ) {
-    val PIN = remember {
-        mutableStateOf("")
-    }
-
-    Column {
-        LoginInput(
-            value = PIN.value,
-            onValueChanged = { PIN.value = it },
-            validation = { it.isNotEmpty() },
-            label = stringResource(R.string.enter_your_pin)
-        )
-        if (userState is NeedPINWithAttemptsLeft) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+        ,
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+        ) {
             Text(
-                text = stringResource(id = R.string.remaining_attempts, userState.attemptsLeft),
-                color = Color.Red
+                text = stringResource(R.string.enter_your_pin),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 20.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            if (userState is NeedPINWithAttemptsLeft) {
+                Text(
+                    text = stringResource(id = R.string.remaining_attempts, userState.attemptsLeft),
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+        }
+
+        PINKeypad(
+            maxPinLength = 4,
+            onPINTyped = { tryLogin(it) }
+        )
+    }
+}
+
+@Composable
+fun PINKeypad(
+    maxPinLength: Int = 4,
+    onPINTyped: (String) -> Unit
+) {
+    val pin = remember { mutableStateOf("") }
+
+    LaunchedEffect(pin.value) {
+        if (pin.value.length == maxPinLength) {
+            onPINTyped(pin.value)
+            pin.value = ""
+        }
+    }
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            PINDisplay(
+                length = pin.value.length,
+                maxLength = maxPinLength,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 24.dp)
+            )
+
+            repeat(3) { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(3) { col ->
+                        val number = row * 3 + col + 1
+                        PINButton(
+                            number = number.toString(),
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (pin.value.length < maxPinLength) {
+                                    pin.value += number
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                PINButton(
+                    number = "0",
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        if (pin.value.length < maxPinLength) {
+                            pin.value += "0"
+                        }
+                    }
+                )
+                PINButton(
+                    number = "⌫",
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        if (pin.value.isNotEmpty()) {
+                            pin.value = pin.value.dropLast(1)
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun PINDisplay(
+    length: Int,
+    maxLength: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+    ) {
+        repeat(maxLength) { index ->
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .background(
+                        color = if (index < length) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        shape = CircleShape
+                    )
             )
         }
-        StandardSpacer()
-        MainActionButton(onClick = {
-            if (PIN.value.isNotEmpty()) {
-                tryLogin(PIN.value)
-            }
-        }, text = stringResource(id = R.string.login))
+    }
+}
+
+@Composable
+fun PINButton(
+    number: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier
+            .aspectRatio(1f)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(12.dp)
+            ),
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+    ) {
+        Text(
+            text = number,
+            fontSize = 24.sp,
+            fontWeight = MaterialTheme.typography.headlineSmall.fontWeight
+        )
     }
 }
 
@@ -480,8 +667,8 @@ fun PasswordCoolDown(refreshState: () -> Unit, secondsLeft: Int) {
     }
 }
 
-fun validatePIN(PIN: String): String {
-    return if (PIN.length < 4) {
+fun validatePIN(pin: String): String {
+    return if (pin.length < 4) {
         App.appContext.getString(R.string.pin_length_must_be_at_least_4)
     } else {
         ""
@@ -561,17 +748,8 @@ fun LoginGreeting(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         color = MaterialTheme.colorScheme.onSecondaryContainer,
-        style = MaterialTheme.typography.displayMedium,
+        style = MaterialTheme.typography.displaySmall,
         modifier = modifier.fillMaxWidth(),
         textAlign = TextAlign.Center
     )
-}
-
-@Preview
-@Composable
-fun CooldownPreview() {
-    VTaskTheme {
-        //PasswordCoolDown(refreshState = { /*TODO*/ }, secondsLeft = 3)
-        LoginInput(value = "ffffffff", label = "test", onValueChanged = {}, validation = { false })
-    }
 }
