@@ -18,7 +18,7 @@
     <string name="create_user">Create user</string>
     <string name="welcome">Welcome</string>
     <string name="user_name">User name:</string>
-    <string name="default_task_title">New task 1</string>
+    <string name="enter_title">Enter a Title</string>
     <string name="folder_name">Folder name:</string>
     <string name="too_many_attempts">Too many attempts.</string>
 </resources>

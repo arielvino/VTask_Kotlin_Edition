@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -91,7 +92,7 @@ fun determineColor(value: Int, positiveProperty: Boolean): Color {
 @Composable
 fun TaskEditor(
     onSave: (task: Task, makeParentAwait: Boolean) -> Unit,
-    task: Task = Task(stringResource(R.string.default_task_title), "", id = "")
+    task: Task = Task("", "", id = "")
 ) {
     val rememberedTask = remember {
         task
@@ -108,6 +109,8 @@ fun TaskEditor(
         mutableStateOf(rememberedTask.status)
     }
 
+    val isTitleFieldFocused = remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colorScheme.background)
@@ -118,6 +121,16 @@ fun TaskEditor(
         TextField(
             textStyle = MaterialTheme.typography.bodyMedium.copy(textAlign = TextAlign.Center),
             value = title.value,
+            placeholder = {
+                if (!isTitleFieldFocused.value) {
+                    Text(
+                        text = stringResource(R.string.enter_title),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray
+                    )
+                }
+            },
             onValueChange = {
                 title.value = it
                 rememberedTask.title = it
@@ -126,7 +139,10 @@ fun TaskEditor(
                 .fillMaxWidth()
                 .border(
                     3.dp, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.shapes.large
-                ),
+                )
+                .onFocusEvent { focusState ->
+                    isTitleFieldFocused.value = focusState.isFocused
+                },
             trailingIcon = {
                 IconButton(onClick = { title.value = "" }) {
                     Icon(imageVector = Icons.Filled.Clear, contentDescription = "Clear title")
